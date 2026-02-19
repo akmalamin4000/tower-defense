@@ -349,3 +349,4 @@ vercel_game/
 |---|---|
 | 2026-02-19 | Initial game design document created |
 | 2026-02-19 | Phase 1–7 implemented: full playable game with all towers, enemies, waves, UI, effects |
+| 2026-02-19 | Responsive design: CSS scales to any screen, touch input for mobile, clickable upgrade/sell/priority buttons |

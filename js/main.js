@@ -11,15 +11,24 @@
     // Initialize game
     Game.init();
 
-    // ---- Input Handling ----
+    // ---- Coordinate Scaling ----
+    // Canvas CSS size may differ from internal resolution (800x640).
+    // All input coordinates must be scaled to internal resolution.
 
-    canvas.addEventListener('click', (e) => {
+    function getScaledCoords(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY,
+        };
+    }
 
+    // ---- Input Handling (Mouse) ----
+
+    function handlePointerDown(mx, my) {
         if (Game.state === 'menu') {
-            // Check play button
             if (UI._startBtn && UI.isInButton(mx, my, UI._startBtn)) {
                 Game.startGame();
             }
@@ -35,22 +44,55 @@
         }
 
         UI.handleClick(mx, my, Game);
+    }
+
+    canvas.addEventListener('click', (e) => {
+        const { x, y } = getScaledCoords(e.clientX, e.clientY);
+        handlePointerDown(x, y);
     });
 
     canvas.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-        UI.handleRightClick(mx, my, Game);
+        const { x, y } = getScaledCoords(e.clientX, e.clientY);
+        UI.handleRightClick(x, y, Game);
     });
 
     canvas.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-        UI.handleMouseMove(mx, my);
+        const { x, y } = getScaledCoords(e.clientX, e.clientY);
+        UI.handleMouseMove(x, y);
     });
+
+    // ---- Input Handling (Touch — Mobile) ----
+
+    let touchMoved = false;
+
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        touchMoved = false;
+        const touch = e.touches[0];
+        const { x, y } = getScaledCoords(touch.clientX, touch.clientY);
+        UI.handleMouseMove(x, y); // update hover preview
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        touchMoved = true;
+        const touch = e.touches[0];
+        const { x, y } = getScaledCoords(touch.clientX, touch.clientY);
+        UI.handleMouseMove(x, y); // update hover preview while dragging
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        if (!touchMoved && e.changedTouches.length > 0) {
+            const touch = e.changedTouches[0];
+            const { x, y } = getScaledCoords(touch.clientX, touch.clientY);
+            handlePointerDown(x, y);
+        }
+        touchMoved = false;
+    }, { passive: false });
+
+    // ---- Keyboard ----
 
     document.addEventListener('keydown', (e) => {
         if (Game.state === 'menu') {

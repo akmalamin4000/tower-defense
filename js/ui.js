@@ -59,6 +59,37 @@ const UI = {
             return this.handleHudClick(mx, my, game);
         }
 
+        // Check tower info panel buttons first (upgrade/sell/priority)
+        if (this.selectedTower) {
+            if (this._upgradeBtn && this.isInButton(mx, my, this._upgradeBtn)) {
+                const tower = this.selectedTower;
+                if (!tower.maxLevel) {
+                    const cost = tower.upgradeCost;
+                    if (game.gold >= cost) {
+                        game.gold -= cost;
+                        tower.upgrade();
+                    }
+                }
+                return;
+            }
+            if (this._sellBtn && this.isInButton(mx, my, this._sellBtn)) {
+                const tower = this.selectedTower;
+                game.gold += tower.sellValue;
+                GameMap.grid[tower.row][tower.col] = 0;
+                game.towers = game.towers.filter(t => t !== tower);
+                this.selectedTower = null;
+                this._upgradeBtn = null;
+                this._sellBtn = null;
+                this._priorityBtn = null;
+                return;
+            }
+            if (this._priorityBtn && this.isInButton(mx, my, this._priorityBtn)) {
+                const idx = TARGET_PRIORITIES.indexOf(this.selectedTower.targetPriority);
+                this.selectedTower.targetPriority = TARGET_PRIORITIES[(idx + 1) % TARGET_PRIORITIES.length];
+                return;
+            }
+        }
+
         // Check grid area — place tower or select existing tower
         const { col, row } = Utils.pixelToGrid(mx, my);
 
@@ -386,11 +417,16 @@ const UI = {
     },
 
     renderSelectedTowerInfo(ctx, game) {
-        if (!this.selectedTower) return;
+        if (!this.selectedTower) {
+            this._upgradeBtn = null;
+            this._sellBtn = null;
+            this._priorityBtn = null;
+            return;
+        }
 
         const tower = this.selectedTower;
         const panelW = 180;
-        const panelH = 140;
+        const panelH = 155;
         let panelX = tower.x + 30;
         let panelY = tower.y - panelH / 2;
 
@@ -424,38 +460,52 @@ const UI = {
         ctx.font = '10px sans-serif';
         ctx.fillText(`DMG: ${Math.round(tower.damage)}  RNG: ${Math.round(tower.range)}  SPD: ${tower.fireRate.toFixed(2)}s`, px, py);
 
-        py += 16;
-        ctx.fillText(`Priority: ${tower.targetPriority} [T]`, px, py);
-
         py += 20;
-        // Upgrade button
+        // Upgrade button (clickable)
         if (!tower.maxLevel) {
             const cost = tower.upgradeCost;
             const canAfford = game.gold >= cost;
+            const ubx = px, uby = py - 8, ubw = 75, ubh = 22;
             ctx.fillStyle = canAfford ? '#43a047' : '#555';
-            Utils.roundRect(ctx, px, py - 8, 75, 22, 3);
+            Utils.roundRect(ctx, ubx, uby, ubw, ubh, 3);
             ctx.fill();
             ctx.fillStyle = '#fff';
             ctx.font = 'bold 10px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(`⬆ ${cost}g [U]`, px + 37, py + 3);
+            ctx.fillText(`⬆ ${cost}g`, ubx + 37, py + 3);
+            this._upgradeBtn = { x: ubx, y: uby, w: ubw, h: ubh };
         } else {
             ctx.fillStyle = '#888';
             ctx.font = '10px sans-serif';
             ctx.textAlign = 'left';
             ctx.fillText('MAX LEVEL', px, py + 3);
+            this._upgradeBtn = null;
         }
 
-        // Sell button
+        // Sell button (clickable)
+        const sbx = px + 85, sby = py - 8, sbw = 75, sbh = 22;
         ctx.fillStyle = '#c62828';
-        Utils.roundRect(ctx, px + 85, py - 8, 75, 22, 3);
+        Utils.roundRect(ctx, sbx, sby, sbw, sbh, 3);
         ctx.fill();
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 10px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`💰 ${tower.sellValue}g [S]`, px + 85 + 37, py + 3);
+        ctx.fillText(`💰 ${tower.sellValue}g`, sbx + 37, py + 3);
+        this._sellBtn = { x: sbx, y: sby, w: sbw, h: sbh };
 
-        py += 22;
+        // Priority button (clickable)
+        py += 28;
+        const pbx = px, pby = py - 4, pbw = panelW - 16, pbh = 20;
+        ctx.fillStyle = '#37474f';
+        Utils.roundRect(ctx, pbx, pby, pbw, pbh, 3);
+        ctx.fill();
+        ctx.fillStyle = '#81d4fa';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Target: ${tower.targetPriority} ▼`, pbx + pbw / 2, pby + pbh / 2);
+        this._priorityBtn = { x: pbx, y: pby, w: pbw, h: pbh };
+
+        py += 18;
         ctx.fillStyle = '#888';
         ctx.font = '9px sans-serif';
         ctx.textAlign = 'left';
@@ -530,21 +580,32 @@ const UI = {
         ctx.font = 'bold 48px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('TOWER DEFENSE', CONFIG.CANVAS_WIDTH / 2, 180);
+        ctx.fillText('TOWER DEFENSE', CONFIG.CANVAS_WIDTH / 2, 160);
 
         ctx.fillStyle = '#ccc';
         ctx.font = '18px sans-serif';
-        ctx.fillText('Defend your base from 30 waves of enemies!', CONFIG.CANVAS_WIDTH / 2, 240);
+        ctx.fillText('Defend your base from 30 waves of enemies!', CONFIG.CANVAS_WIDTH / 2, 220);
+
+        // Detect touch device
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
         ctx.fillStyle = '#90a4ae';
-        ctx.font = '14px sans-serif';
-        ctx.fillText('Click to place towers • 1-6 to select tower type', CONFIG.CANVAS_WIDTH / 2, 290);
-        ctx.fillText('U = Upgrade • S = Sell • T = Change priority', CONFIG.CANVAS_WIDTH / 2, 312);
-        ctx.fillText('Space = Start wave / Pause', CONFIG.CANVAS_WIDTH / 2, 334);
+        ctx.font = '13px sans-serif';
+
+        if (isMobile) {
+            ctx.fillText('Tap a tower in the bottom panel to select', CONFIG.CANVAS_WIDTH / 2, 270);
+            ctx.fillText('Tap the grid to place towers', CONFIG.CANVAS_WIDTH / 2, 292);
+            ctx.fillText('Tap a placed tower for upgrade/sell/priority', CONFIG.CANVAS_WIDTH / 2, 314);
+            ctx.fillText('Use the buttons to start waves & control speed', CONFIG.CANVAS_WIDTH / 2, 336);
+        } else {
+            ctx.fillText('Click to place towers • 1-6 to select tower type', CONFIG.CANVAS_WIDTH / 2, 270);
+            ctx.fillText('U = Upgrade • S = Sell • T = Change priority', CONFIG.CANVAS_WIDTH / 2, 292);
+            ctx.fillText('Space = Start wave / Pause', CONFIG.CANVAS_WIDTH / 2, 314);
+        }
 
         // Play button
         const btnX = CONFIG.CANVAS_WIDTH / 2 - 80;
-        const btnY = 390;
+        const btnY = 380;
         ctx.fillStyle = '#43a047';
         Utils.roundRect(ctx, btnX, btnY, 160, 50, 8);
         ctx.fill();

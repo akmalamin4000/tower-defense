@@ -4,14 +4,19 @@
     box-sizing: border-box;
 }
 
-body {
+html, body {
+    width: 100%;
+    height: 100%;
     background-color: #1a1a2e;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
+    touch-action: none; /* prevent browser gestures on mobile */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 #game-container {
@@ -19,9 +24,32 @@ body {
     border: 3px solid #e6a817;
     border-radius: 4px;
     box-shadow: 0 0 30px rgba(230, 168, 23, 0.3);
+    max-width: 100vw;
+    max-height: 100vh;
+    /* Aspect ratio: 800 / 640 = 1.25 */
+    aspect-ratio: 800 / 640;
 }
 
 canvas {
     display: block;
     cursor: crosshair;
+    width: 100%;
+    height: 100%;
+}
+
+/* Scale container to fit viewport */
+@media (max-aspect-ratio: 800/640) {
+    /* Viewport is taller than game — fit to width */
+    #game-container {
+        width: 100vw;
+        height: auto;
+    }
+}
+
+@media (min-aspect-ratio: 800/640) {
+    /* Viewport is wider than game — fit to height */
+    #game-container {
+        height: 100vh;
+        width: auto;
+    }
 }
