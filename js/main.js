@@ -27,6 +27,9 @@
 
     // ---- Input Handling (Mouse) ----
 
+    // Track last touch time to prevent click/touch double-fire
+    let lastTouchTime = 0;
+
     function handlePointerDown(mx, my) {
         if (Game.state === 'menu') {
             if (UI._startBtn && UI.isInButton(mx, my, UI._startBtn)) {
@@ -36,10 +39,22 @@
         }
 
         if (Game.state === 'win' || Game.state === 'lose') {
+            // "Play Again" / "Retry" button
             if (UI._restartBtn && UI.isInButton(mx, my, UI._restartBtn)) {
                 Game.init();
                 Game.startGame();
+                return;
             }
+            // "Main Menu" button
+            if (UI._menuBtn && UI.isInButton(mx, my, UI._menuBtn)) {
+                Game.init(); // resets state to 'menu'
+                return;
+            }
+            return;
+        }
+
+        if (Game.state === 'paused') {
+            Game.state = 'playing';
             return;
         }
 
@@ -47,6 +62,8 @@
     }
 
     canvas.addEventListener('click', (e) => {
+        // Skip synthetic click events triggered by touch (within 500ms)
+        if (Date.now() - lastTouchTime < 500) return;
         const { x, y } = getScaledCoords(e.clientX, e.clientY);
         handlePointerDown(x, y);
     });
@@ -69,6 +86,7 @@
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
         touchMoved = false;
+        lastTouchTime = Date.now();
         const touch = e.touches[0];
         const { x, y } = getScaledCoords(touch.clientX, touch.clientY);
         UI.handleMouseMove(x, y); // update hover preview
@@ -84,6 +102,7 @@
 
     canvas.addEventListener('touchend', (e) => {
         e.preventDefault();
+        lastTouchTime = Date.now();
         if (!touchMoved && e.changedTouches.length > 0) {
             const touch = e.changedTouches[0];
             const { x, y } = getScaledCoords(touch.clientX, touch.clientY);
@@ -105,8 +124,7 @@
 
         if (Game.state === 'win' || Game.state === 'lose') {
             if (e.key === ' ' || e.key === 'Enter') {
-                Game.init();
-                Game.startGame();
+                Game.init(); // go back to menu
             }
             return;
         }

@@ -161,15 +161,12 @@ const Game = {
             enemy.update(scaledDt, this.enemies);
         }
 
-        // Check enemies that reached end
+        // Check enemies that reached end + collect gold from dead
         for (const enemy of this.enemies) {
-            if (enemy.reachedEnd) {
+            if (!enemy.alive && enemy.reachedEnd && !enemy.penalized) {
                 this.lives -= (enemy.isBoss ? 5 : 1);
+                enemy.penalized = true;
             }
-        }
-
-        // Collect gold from dead enemies
-        for (const enemy of this.enemies) {
             if (!enemy.alive && !enemy.reachedEnd && !enemy.rewarded) {
                 this.gold += enemy.reward;
                 enemy.rewarded = true;

@@ -4,7 +4,14 @@
     box-sizing: border-box;
 }
 
-html, body {
+html {
+    width: 100%;
+    height: 100%;
+    background-color: #1a1a2e;
+    overflow: hidden;
+}
+
+body {
     width: 100%;
     height: 100%;
     background-color: #1a1a2e;
@@ -13,7 +20,7 @@ html, body {
     align-items: center;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
-    touch-action: none; /* prevent browser gestures on mobile */
+    touch-action: none;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
@@ -26,7 +33,6 @@ html, body {
     box-shadow: 0 0 30px rgba(230, 168, 23, 0.3);
     max-width: 100vw;
     max-height: 100vh;
-    /* Aspect ratio: 800 / 640 = 1.25 */
     aspect-ratio: 800 / 640;
 }
 

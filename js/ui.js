@@ -576,104 +576,233 @@ const UI = {
         ctx.fillStyle = '#1a1a2e';
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-        ctx.fillStyle = '#e6a817';
-        ctx.font = 'bold 48px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('TOWER DEFENSE', CONFIG.CANVAS_WIDTH / 2, 160);
-
-        ctx.fillStyle = '#ccc';
-        ctx.font = '18px sans-serif';
-        ctx.fillText('Defend your base from 30 waves of enemies!', CONFIG.CANVAS_WIDTH / 2, 220);
-
-        // Detect touch device
-        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-        ctx.fillStyle = '#90a4ae';
-        ctx.font = '13px sans-serif';
-
-        if (isMobile) {
-            ctx.fillText('Tap a tower in the bottom panel to select', CONFIG.CANVAS_WIDTH / 2, 270);
-            ctx.fillText('Tap the grid to place towers', CONFIG.CANVAS_WIDTH / 2, 292);
-            ctx.fillText('Tap a placed tower for upgrade/sell/priority', CONFIG.CANVAS_WIDTH / 2, 314);
-            ctx.fillText('Use the buttons to start waves & control speed', CONFIG.CANVAS_WIDTH / 2, 336);
-        } else {
-            ctx.fillText('Click to place towers • 1-6 to select tower type', CONFIG.CANVAS_WIDTH / 2, 270);
-            ctx.fillText('U = Upgrade • S = Sell • T = Change priority', CONFIG.CANVAS_WIDTH / 2, 292);
-            ctx.fillText('Space = Start wave / Pause', CONFIG.CANVAS_WIDTH / 2, 314);
+        // Decorative border lines
+        ctx.strokeStyle = 'rgba(230, 168, 23, 0.15)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 5; i++) {
+            ctx.strokeRect(20 + i * 15, 20 + i * 15, CONFIG.CANVAS_WIDTH - 40 - i * 30, CONFIG.CANVAS_HEIGHT - 40 - i * 30);
         }
 
+        // Title glow
+        ctx.shadowColor = '#e6a817';
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = '#e6a817';
+        ctx.font = 'bold 52px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('TOWER DEFENSE', CONFIG.CANVAS_WIDTH / 2, 130);
+        ctx.shadowBlur = 0;
+
+        // Subtitle
+        ctx.fillStyle = '#90a4ae';
+        ctx.font = '16px sans-serif';
+        ctx.fillText('Survive 30 waves. Defend your base.', CONFIG.CANVAS_WIDTH / 2, 175);
+
+        // Divider
+        ctx.strokeStyle = 'rgba(230, 168, 23, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(CONFIG.CANVAS_WIDTH / 2 - 150, 200);
+        ctx.lineTo(CONFIG.CANVAS_WIDTH / 2 + 150, 200);
+        ctx.stroke();
+
+        // How to play section
+        ctx.fillStyle = '#e6a817';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText('HOW TO PLAY', CONFIG.CANVAS_WIDTH / 2, 230);
+
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        ctx.fillStyle = '#b0bec5';
+        ctx.font = '13px sans-serif';
+        const cx = CONFIG.CANVAS_WIDTH / 2;
+
+        if (isMobile) {
+            const tips = [
+                '🏗  Tap a tower in the bottom panel, then tap the grid to place',
+                '⬆  Tap a placed tower to upgrade, sell, or change priority',
+                '🌊  Tap "Next Wave" to send the next wave of enemies',
+                '⏩  Use Speed and Pause buttons to control game flow',
+                '💰  Earn gold by killing enemies and completing waves',
+            ];
+            tips.forEach((tip, i) => {
+                ctx.fillText(tip, cx, 262 + i * 22);
+            });
+        } else {
+            const tips = [
+                '🏗  Click to place towers  •  Keys 1-6 to select tower type',
+                '⬆  U = Upgrade  •  S = Sell  •  T = Change target priority',
+                '🌊  Space = Start next wave / Pause game',
+                '⏩  Use Speed button or fast-forward for 2x speed',
+                '💰  Earn gold by killing enemies and completing waves',
+            ];
+            tips.forEach((tip, i) => {
+                ctx.fillText(tip, cx, 262 + i * 22);
+            });
+        }
+
+        // Tower preview row
+        ctx.fillStyle = '#e6a817';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText('TOWERS', cx, 395);
+
+        const types = Object.keys(TOWER_TYPES);
+        const previewStartX = cx - (types.length * 50) / 2 + 25;
+        types.forEach((key, i) => {
+            const def = TOWER_TYPES[key];
+            const px = previewStartX + i * 50;
+            const py = 425;
+            // Tower circle
+            ctx.fillStyle = def.color;
+            ctx.beginPath();
+            ctx.arc(px, py, 12, 0, Math.PI * 2);
+            ctx.fill();
+            // Name
+            ctx.fillStyle = '#aaa';
+            ctx.font = '9px sans-serif';
+            ctx.fillText(def.name.split(' ')[0], px, py + 22);
+        });
+
         // Play button
-        const btnX = CONFIG.CANVAS_WIDTH / 2 - 80;
-        const btnY = 380;
+        const btnW = 200;
+        const btnH = 55;
+        const btnX = cx - btnW / 2;
+        const btnY = 480;
+
+        // Button shadow
+        ctx.shadowColor = '#43a047';
+        ctx.shadowBlur = 15;
         ctx.fillStyle = '#43a047';
-        Utils.roundRect(ctx, btnX, btnY, 160, 50, 8);
+        Utils.roundRect(ctx, btnX, btnY, btnW, btnH, 10);
         ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Button border
+        ctx.strokeStyle = '#66bb6a';
+        ctx.lineWidth = 2;
+        Utils.roundRect(ctx, btnX, btnY, btnW, btnH, 10);
+        ctx.stroke();
 
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText('▶  PLAY', CONFIG.CANVAS_WIDTH / 2, btnY + 25);
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText('▶  START GAME', cx, btnY + btnH / 2);
 
         // Store button region for click detection
-        this._startBtn = { x: btnX, y: btnY, w: 160, h: 50 };
+        this._startBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
+
+        // Version / credit
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('v1.0', cx, CONFIG.CANVAS_HEIGHT - 20);
     },
 
     /**
      * Render win screen
      */
     renderWinScreen(ctx, game) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+        // Decorative border
+        ctx.strokeStyle = 'rgba(255, 213, 79, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(40, 40, CONFIG.CANVAS_WIDTH - 80, CONFIG.CANVAS_HEIGHT - 80);
 
         ctx.fillStyle = '#ffd54f';
         ctx.font = 'bold 48px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('🎉 VICTORY! 🎉', CONFIG.CANVAS_WIDTH / 2, 200);
+        ctx.shadowColor = '#ffd54f';
+        ctx.shadowBlur = 20;
+        ctx.fillText('🎉 VICTORY! 🎉', CONFIG.CANVAS_WIDTH / 2, 170);
+        ctx.shadowBlur = 0;
 
         ctx.fillStyle = '#ccc';
         ctx.font = '18px sans-serif';
-        ctx.fillText(`You survived all ${CONFIG.TOTAL_WAVES} waves!`, CONFIG.CANVAS_WIDTH / 2, 260);
-        ctx.fillText(`Lives remaining: ${game.lives}`, CONFIG.CANVAS_WIDTH / 2, 290);
-        ctx.fillText(`Towers built: ${game.towers.length}`, CONFIG.CANVAS_WIDTH / 2, 320);
+        ctx.fillText(`You survived all ${CONFIG.TOTAL_WAVES} waves!`, CONFIG.CANVAS_WIDTH / 2, 230);
 
-        const btnX = CONFIG.CANVAS_WIDTH / 2 - 80;
-        const btnY = 380;
+        // Stats
+        ctx.fillStyle = '#90a4ae';
+        ctx.font = '15px sans-serif';
+        ctx.fillText(`❤️ Lives remaining: ${game.lives}`, CONFIG.CANVAS_WIDTH / 2, 270);
+        ctx.fillText(`🏰 Towers built: ${game.towers.length}`, CONFIG.CANVAS_WIDTH / 2, 296);
+        ctx.fillText(`💰 Gold remaining: ${game.gold}`, CONFIG.CANVAS_WIDTH / 2, 322);
+
+        // Play Again button
+        const btn1X = CONFIG.CANVAS_WIDTH / 2 - 90;
+        const btn1Y = 370;
         ctx.fillStyle = '#43a047';
-        Utils.roundRect(ctx, btnX, btnY, 160, 50, 8);
+        Utils.roundRect(ctx, btn1X, btn1Y, 180, 48, 8);
         ctx.fill();
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText('Play Again', CONFIG.CANVAS_WIDTH / 2, btnY + 25);
-        this._restartBtn = { x: btnX, y: btnY, w: 160, h: 50 };
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText('▶  Play Again', CONFIG.CANVAS_WIDTH / 2, btn1Y + 24);
+        this._restartBtn = { x: btn1X, y: btn1Y, w: 180, h: 48 };
+
+        // Back to Menu button
+        const btn2X = CONFIG.CANVAS_WIDTH / 2 - 90;
+        const btn2Y = 432;
+        ctx.fillStyle = '#455a64';
+        Utils.roundRect(ctx, btn2X, btn2Y, 180, 48, 8);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText('←  Main Menu', CONFIG.CANVAS_WIDTH / 2, btn2Y + 24);
+        this._menuBtn = { x: btn2X, y: btn2Y, w: 180, h: 48 };
     },
 
     /**
      * Render lose screen
      */
     renderLoseScreen(ctx, game) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+        // Decorative border
+        ctx.strokeStyle = 'rgba(239, 83, 80, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(40, 40, CONFIG.CANVAS_WIDTH - 80, CONFIG.CANVAS_HEIGHT - 80);
 
         ctx.fillStyle = '#ef5350';
         ctx.font = 'bold 48px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('DEFEAT', CONFIG.CANVAS_WIDTH / 2, 200);
+        ctx.shadowColor = '#ef5350';
+        ctx.shadowBlur = 20;
+        ctx.fillText('DEFEAT', CONFIG.CANVAS_WIDTH / 2, 180);
+        ctx.shadowBlur = 0;
 
         ctx.fillStyle = '#ccc';
         ctx.font = '18px sans-serif';
-        ctx.fillText(`You reached wave ${game.currentWave} of ${CONFIG.TOTAL_WAVES}`, CONFIG.CANVAS_WIDTH / 2, 260);
+        ctx.fillText(`You reached wave ${game.currentWave} of ${CONFIG.TOTAL_WAVES}`, CONFIG.CANVAS_WIDTH / 2, 240);
 
-        const btnX = CONFIG.CANVAS_WIDTH / 2 - 80;
-        const btnY = 330;
+        // Stats
+        ctx.fillStyle = '#90a4ae';
+        ctx.font = '15px sans-serif';
+        ctx.fillText(`🏰 Towers built: ${game.towers.length}`, CONFIG.CANVAS_WIDTH / 2, 280);
+        ctx.fillText(`💰 Gold remaining: ${game.gold}`, CONFIG.CANVAS_WIDTH / 2, 306);
+
+        // Retry button
+        const btn1X = CONFIG.CANVAS_WIDTH / 2 - 90;
+        const btn1Y = 350;
         ctx.fillStyle = '#c62828';
-        Utils.roundRect(ctx, btnX, btnY, 160, 50, 8);
+        Utils.roundRect(ctx, btn1X, btn1Y, 180, 48, 8);
         ctx.fill();
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText('Retry', CONFIG.CANVAS_WIDTH / 2, btnY + 25);
-        this._restartBtn = { x: btnX, y: btnY, w: 160, h: 50 };
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText('↻  Retry', CONFIG.CANVAS_WIDTH / 2, btn1Y + 24);
+        this._restartBtn = { x: btn1X, y: btn1Y, w: 180, h: 48 };
+
+        // Back to Menu button
+        const btn2X = CONFIG.CANVAS_WIDTH / 2 - 90;
+        const btn2Y = 412;
+        ctx.fillStyle = '#455a64';
+        Utils.roundRect(ctx, btn2X, btn2Y, 180, 48, 8);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText('←  Main Menu', CONFIG.CANVAS_WIDTH / 2, btn2Y + 24);
+        this._menuBtn = { x: btn2X, y: btn2Y, w: 180, h: 48 };
     },
 
     /**
