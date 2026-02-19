@@ -609,7 +609,7 @@ const UI = {
         // How to play section
         ctx.fillStyle = '#e6a817';
         ctx.font = 'bold 16px sans-serif';
-        ctx.fillText('HOW TO PLAY', CONFIG.CANVAS_WIDTH / 2, 230);
+        ctx.fillText('HOW TO PLAYZZZZZ', CONFIG.CANVAS_WIDTH / 2, 230);
 
         const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 

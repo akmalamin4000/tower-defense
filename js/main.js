@@ -8,17 +8,30 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
+    // ---- High-DPI (Retina) fix ----
+    // Scale canvas internal resolution by devicePixelRatio so text/graphics are sharp.
+    // All game logic still uses 800×640 coordinates thanks to ctx.scale().
+    function setupHiDPI() {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = CONFIG.CANVAS_WIDTH * dpr;
+        canvas.height = CONFIG.CANVAS_HEIGHT * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    setupHiDPI();
+
+    // Re-apply on resize (handles orientation change on mobile)
+    window.addEventListener('resize', setupHiDPI);
+
     // Initialize game
     Game.init();
 
     // ---- Coordinate Scaling ----
-    // Canvas CSS size may differ from internal resolution (800x640).
-    // All input coordinates must be scaled to internal resolution.
+    // Input coordinates must map from CSS display size to logical 800×640.
 
     function getScaledCoords(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
+        const scaleX = CONFIG.CANVAS_WIDTH / rect.width;
+        const scaleY = CONFIG.CANVAS_HEIGHT / rect.height;
         return {
             x: (clientX - rect.left) * scaleX,
             y: (clientY - rect.top) * scaleY,
