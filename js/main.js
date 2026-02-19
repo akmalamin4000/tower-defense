@@ -9,13 +9,19 @@
     const ctx = canvas.getContext('2d');
 
     // ---- High-DPI (Retina) fix ----
-    // Scale canvas internal resolution by devicePixelRatio so text/graphics are sharp.
-    // All game logic still uses 800×640 coordinates thanks to ctx.scale().
+    // Match canvas bitmap to actual physical screen pixels for crisp rendering.
+    // CSS still controls the display size; we just read it and scale the bitmap.
     function setupHiDPI() {
         const dpr = window.devicePixelRatio || 1;
-        canvas.width = CONFIG.CANVAS_WIDTH * dpr;
-        canvas.height = CONFIG.CANVAS_HEIGHT * dpr;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        // Read the actual CSS display size (set by the responsive container)
+        const rect = canvas.getBoundingClientRect();
+        // Set bitmap to exact physical pixel count — this is the key to sharpness
+        canvas.width  = Math.round(rect.width  * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        // Scale context so game code still draws in 800×640 coordinates
+        const scaleX = canvas.width  / CONFIG.CANVAS_WIDTH;
+        const scaleY = canvas.height / CONFIG.CANVAS_HEIGHT;
+        ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
     }
     setupHiDPI();
 
